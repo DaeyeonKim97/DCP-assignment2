@@ -1,0 +1,40 @@
+version: '2.0'
+services:
+    db:
+        image: postgres
+        volumes:
+            - its_db:/var/lib/postgresql/data
+        environment:
+            - POSTGRES_DB=djangosample
+            - POSTGRES_USER=sampledb
+            - POSTGRES_PASSWORD=samplesecret
+
+    web:
+        build: 
+            context: .
+            dockerfile: ./Dockerfile
+        environment: 
+            - DJANGO_DEBUG=True
+            - DJANGO_DB_HOST=db
+            - DJANGO_DB_PORT=5432
+            - DJANGO_DB_NAME=sampledb
+            - DJANGO_DB_USERNAME=sampleuser
+            - DJANGO_DB_PASSWORD=samplesecret
+        ports: 
+            - "8000:8000"
+        command: 
+            - bash
+            - -c
+            - |
+              echo "from django.contrib.auth.models import User; User.objects.create_superuser('admin', 'admin@example.com', 'pass')" | python manage.py shell
+              python manage.py makemigrations
+              python manage.py migrate
+              python manage.py runserver 0:8000
+        volumes: 
+            - ./:/app
+        restart: always
+        depends_on:
+            - db
+
+volumes:
+    its_db: {}
